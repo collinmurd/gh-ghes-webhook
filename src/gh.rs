@@ -66,7 +66,6 @@ impl GitHub {
 #[derive(serde::Serialize, Debug)]
 enum WebhookContentType {
     Json,
-    Form,
 }
 #[derive(serde::Serialize, Debug)]
 struct WebhookConfig {
