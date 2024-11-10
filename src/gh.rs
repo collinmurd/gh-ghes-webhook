@@ -1,8 +1,6 @@
 use std::process::Command;
-use serde_json::json;
 
 pub struct GitHub {
-    host: String,
     url: String,
     client: reqwest::Client
 }
@@ -12,7 +10,6 @@ impl GitHub {
         let url = format!("https://api.{}/repos/{}/hooks", host, repo);
 
         GitHub {
-            host: host,
             url: url,
             client: reqwest::Client::builder()
                 .user_agent(env!("CARGO_PKG_NAME"))
@@ -24,7 +21,6 @@ impl GitHub {
         let url = format!("https://api.{}/orgs/{}/hooks", host, org);
 
         GitHub {
-            host: host,
             url: url,
             client: reqwest::Client::builder()
                 .user_agent(env!("CARGO_PKG_NAME"))
@@ -32,16 +28,17 @@ impl GitHub {
         }
     }
 
-    pub async fn create_webhook(&self) -> anyhow::Result<CreateWebhookResponse> {
+    pub async fn create_webhook(&self, secret: Option<String>, events: Vec<String>) -> anyhow::Result<CreateWebhookResponse> {
         let token = self.get_auth_token().unwrap();
-        let body = json!({
-            "name": "cli",
-            "active": true,
-            "events": ["*"],
-            "config": {
-                "content_type": "json"
+        let body = CreateWebhookPayload {
+            name: "cli".to_string(),
+            active: true,
+            events: events,
+            config: WebhookConfig {
+                content_type: WebhookContentType::Json,
+                secret: secret,
             }
-        });
+        };
 
         let req = self.client.post(&self.url)
             .bearer_auth(token)
@@ -66,6 +63,23 @@ impl GitHub {
     }
 }
 
+#[derive(serde::Serialize, Debug)]
+enum WebhookContentType {
+    Json,
+    Form,
+}
+#[derive(serde::Serialize, Debug)]
+struct WebhookConfig {
+    content_type: WebhookContentType,
+    secret: Option<String>,
+}
+#[derive(serde::Serialize, Debug)]
+struct CreateWebhookPayload {
+    name: String,
+    active: bool,
+    events: Vec<String>,
+    config: WebhookConfig,
+}
 
 #[derive(serde::Deserialize, Debug)]
 pub struct CreateWebhookResponse {

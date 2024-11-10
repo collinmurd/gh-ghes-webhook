@@ -57,7 +57,7 @@ async fn main() {
                 None => gh::GitHub::new_with_org(github_host, location.org.unwrap())
             };
 
-            let webhook = gh.create_webhook().await.unwrap();
+            let webhook = gh.create_webhook(secret, events).await.unwrap();
 
             println!("Webhook created: {:?}", webhook);
         }
