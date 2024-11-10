@@ -1,5 +1,7 @@
 use clap::{Args, Parser, Subcommand};
 
+pub mod gh;
+
 #[derive(Parser)]
 #[command(version, about = "Webhook forwarding for GitHub Enterprise Server", long_about = None)]
 struct Cli {
@@ -37,19 +39,24 @@ enum Commands {
 struct WebhookLocation {
         /// Name of the org where the webhook is installed
         #[arg(short='O', long)]
-        org: String,
+        org: Option<String>,
 
         /// Name of the repo where the webhook is installed
         #[arg(short='R', long)]
-        repo: String,
+        repo: Option<String>,
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let cli = Cli::parse();
 
     match cli.command {
         Commands::Forward {events, github_host, location, secret, url} => {
-            println!("Forwarding...");
+            let gh = gh::GitHub::new(github_host, location.org, location.repo);
+
+            let webhook = gh.create_webhook().await.unwrap();
+
+            println!("Webhook created: {:?}", webhook);
         }
     }
 }
