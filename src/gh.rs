@@ -8,11 +8,21 @@ pub struct GitHub {
 }
 
 impl GitHub {
-    pub fn new(host: String, org: Option<String>, repo: Option<String>) -> Self {
-        let url = match repo {
-            Some(r) => format!("https://api.{}/repos/{}/hooks", host, r),
-            None => format!("https://api.{}/orgs/{}/hooks", host, org.unwrap())
-        };
+    pub fn new_with_repo(host: String, repo: String) -> Self {
+        let url = format!("https://api.{}/repos/{}/hooks", host, repo);
+
+        GitHub {
+            host: host,
+            url: url,
+            client: reqwest::Client::builder()
+                .user_agent(env!("CARGO_PKG_NAME"))
+                .build().unwrap()
+        }
+    }
+
+    pub fn new_with_org(host: String, org: String) -> Self {
+        let url = format!("https://api.{}/orgs/{}/hooks", host, org);
+
         GitHub {
             host: host,
             url: url,

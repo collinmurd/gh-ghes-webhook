@@ -52,7 +52,10 @@ async fn main() {
 
     match cli.command {
         Commands::Forward {events, github_host, location, secret, url} => {
-            let gh = gh::GitHub::new(github_host, location.org, location.repo);
+            let gh = match location.repo {
+                Some(r) => gh::GitHub::new_with_repo(github_host, r),
+                None => gh::GitHub::new_with_org(github_host, location.org.unwrap())
+            };
 
             let webhook = gh.create_webhook().await.unwrap();
 
@@ -62,8 +65,13 @@ async fn main() {
 }
 
 
-#[test]
-fn verify_cli() {
-    use clap::CommandFactory;
-    Cli::command().debug_assert();
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use clap::*;
+
+    #[test]
+    fn verify_cli() {
+        Cli::command().debug_assert();
+    }
 }
