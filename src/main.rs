@@ -2,8 +2,10 @@ use std::{sync::mpsc, thread, time::Duration};
 
 use chrono::{DateTime, Utc};
 use clap::{Args, Parser, Subcommand};
+use pollster::poll;
 
 pub mod gh;
+pub mod pollster;
 
 #[derive(Parser)]
 #[command(version, about = "Webhook forwarding for GitHub Enterprise Server", long_about = None)]
@@ -66,38 +68,7 @@ fn main() {
             let (tx, rx) = mpsc::channel();
 
             thread::spawn(move || {
-                let start_time: DateTime<Utc> = Utc::now();
-                println!("Start time: {:?}", start_time);
-                let mut last_id: Option<u64> = None;
-                loop {
-                    thread::sleep(Duration::from_secs(5)); // Sleeps for 5 seconds
-                    println!("Polling for payloads");
-                    let deliveries = gh.get_webhook_deliveries(webhook.id);
-                    println!("Deliveries: {:?}", deliveries);
-                    match deliveries {
-                        Ok(deliveries) => {
-                            // Iterate over deliveries in reverse order
-                            // skip events before the start time and only process new events
-                            for delivery in deliveries.iter().rev() {
-                                if let Some(last_delivery_id) = last_id {
-                                    if delivery.id > last_delivery_id {
-                                        last_id = Some(delivery.id);
-                                        let details = gh.get_webhook_delivery_details(webhook.id, delivery.id).unwrap();
-                                        tx.send(details).unwrap();
-                                    }
-                                } else if delivery.delivered_at > start_time {
-                                    last_id = Some(delivery.id);
-                                    let details = gh.get_webhook_delivery_details(webhook.id, delivery.id).unwrap();
-                                    tx.send(details).unwrap();
-                                }
-                            }
-                        },
-                        Err(e) => {
-                            println!("Error polling for payloads: {:?}", e);
-                            break;
-                        }
-                    }
-                }
+                poll(tx, &gh, &webhook);
             });
 
             loop {
