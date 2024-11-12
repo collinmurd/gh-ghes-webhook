@@ -7,8 +7,9 @@ use crate::gh::{CreateWebhookResponse, GitHub, WebhookDeliveryDetails};
 
 pub fn poll(tx: Sender<WebhookDeliveryDetails>, gh: &GitHub, webhook: &CreateWebhookResponse) {
     let start_time: DateTime<Utc> = Utc::now();
-    println!("Start time: {:?}", start_time);
     let mut last_id: Option<u64> = None;
+
+    println!("Start time: {:?}", start_time);
     loop {
         thread::sleep(Duration::from_secs(5)); // Sleep for 5 seconds
 

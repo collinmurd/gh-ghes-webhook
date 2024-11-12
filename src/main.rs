@@ -1,11 +1,10 @@
-use std::{sync::mpsc, thread, time::Duration};
+use std::{sync::mpsc, thread};
 
-use chrono::{DateTime, Utc};
 use clap::{Args, Parser, Subcommand};
-use pollster::poll;
 
 pub mod gh;
 pub mod pollster;
+pub mod forwarder;
 
 #[derive(Parser)]
 #[command(version, about = "Webhook forwarding for GitHub Enterprise Server", long_about = None)]
@@ -68,13 +67,13 @@ fn main() {
             let (tx, rx) = mpsc::channel();
 
             thread::spawn(move || {
-                poll(tx, &gh, &webhook);
+                pollster::poll(tx, &gh, &webhook);
             });
 
             loop {
                 match rx.recv() {
                     Ok(payload) => {
-                        println!("Received payload: {:?}", payload);
+                        forwarder::forward(payload);
                     },
                     Err(_e) => {
                         break;
