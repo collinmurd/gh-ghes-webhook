@@ -1,3 +1,6 @@
+use std::{sync::mpsc, thread, time::Duration};
+
+use chrono::{DateTime, Utc};
 use clap::{Args, Parser, Subcommand};
 
 pub mod gh;
@@ -46,8 +49,7 @@ struct WebhookLocation {
         repo: Option<String>,
 }
 
-#[tokio::main]
-async fn main() {
+fn main() {
     let cli = Cli::parse();
 
     match cli.command {
@@ -57,13 +59,60 @@ async fn main() {
                 None => gh::GitHub::new_with_org(github_host, location.org.unwrap())
             };
 
-            let webhook = gh.create_webhook(secret, events).await.unwrap();
+            let webhook = gh.create_webhook(secret, events).unwrap();
 
-            println!("Webhook created: {:?}", webhook);
+            println!("CLI Webhook created");
+
+            let (tx, rx) = mpsc::channel();
+
+            thread::spawn(move || {
+                let start_time: DateTime<Utc> = Utc::now();
+                println!("Start time: {:?}", start_time);
+                let mut last_id: Option<u64> = None;
+                loop {
+                    thread::sleep(Duration::from_secs(5)); // Sleeps for 5 seconds
+                    println!("Polling for payloads");
+                    let deliveries = gh.get_webhook_deliveries(webhook.id);
+                    println!("Deliveries: {:?}", deliveries);
+                    match deliveries {
+                        Ok(deliveries) => {
+                            // Iterate over deliveries in reverse order
+                            // skip events before the start time and only process new events
+                            for delivery in deliveries.iter().rev() {
+                                if let Some(last_delivery_id) = last_id {
+                                    if delivery.id > last_delivery_id {
+                                        last_id = Some(delivery.id);
+                                        let details = gh.get_webhook_delivery_details(webhook.id, delivery.id).unwrap();
+                                        tx.send(details).unwrap();
+                                    }
+                                } else if delivery.delivered_at > start_time {
+                                    last_id = Some(delivery.id);
+                                    let details = gh.get_webhook_delivery_details(webhook.id, delivery.id).unwrap();
+                                    tx.send(details).unwrap();
+                                }
+                            }
+                        },
+                        Err(e) => {
+                            println!("Error polling for payloads: {:?}", e);
+                            break;
+                        }
+                    }
+                }
+            });
+
+            loop {
+                match rx.recv() {
+                    Ok(payload) => {
+                        println!("Received payload: {:?}", payload);
+                    },
+                    Err(_e) => {
+                        break;
+                    }
+                }
+            }
         }
     }
 }
-
 
 #[cfg(test)]
 mod tests {
