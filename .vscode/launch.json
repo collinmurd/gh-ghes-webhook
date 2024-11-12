@@ -1,0 +1,49 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'gh-ghes-webhook'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=gh-ghes-webhook",
+                    "--package=gh-ghes-webhook"
+                ],
+                "filter": {
+                    "name": "gh-ghes-webhook",
+                    "kind": "bin"
+                }
+            },
+            "args": [
+                "forward",
+                "-Rcollinmurd/gh-ghes-webhook",
+                "-Eissues"
+            ],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'gh-ghes-webhook'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=gh-ghes-webhook",
+                    "--package=gh-ghes-webhook"
+                ],
+                "filter": {
+                    "name": "gh-ghes-webhook",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
