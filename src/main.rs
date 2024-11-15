@@ -61,8 +61,14 @@ fn main() {
             };
 
             let webhook = gh.create_webhook(secret, events).unwrap();
-
             println!("CLI Webhook created");
+
+            let gh_clone = gh.clone();
+            ctrlc::set_handler(move || {
+                println!("Deleting webhook...");
+                gh_clone.delete_webhook(webhook.id).unwrap();
+                std::process::exit(0);
+            }).unwrap();
 
             let (tx, rx) = mpsc::channel();
 

@@ -3,6 +3,7 @@ use std::process::Command;
 use chrono::{DateTime, Utc};
 use serde_json::Value;
 
+#[derive(Clone)]
 pub struct GitHub {
     url: String,
     client: reqwest::blocking::Client
@@ -52,6 +53,17 @@ impl GitHub {
             .unwrap(); // TODO handle error
 
         Ok(resp)
+    }
+
+    pub fn delete_webhook(&self, webhook_id: u32) -> anyhow::Result<()> {
+        let token = self.get_auth_token().unwrap();
+        let url = format!("{}/{}", &self.url, webhook_id);
+        self.client.delete(&url)
+            .bearer_auth(token)
+            .send()
+            .unwrap(); // TODO handle error
+
+        Ok(())
     }
 
     pub fn get_webhook_deliveries(&self, id: u32) -> anyhow::Result<Vec<WebhookDelivery>> {
