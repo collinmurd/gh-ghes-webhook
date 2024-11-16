@@ -10,8 +10,7 @@ pub fn poll(tx: Sender<WebhookDeliveryDetails>, gh: &GitHub, webhook: &CreateWeb
     let mut last_id: Option<u64> = None;
 
     loop {
-        thread::sleep(Duration::from_secs(5)); // Sleep for 5 seconds
-
+        log::debug!("Polling for webhook deliveries");
         let deliveries = gh.get_webhook_deliveries(webhook.id);
         if let Ok(deliveries) = deliveries {
             log::debug!("Received {} deliveries", deliveries.len());
@@ -39,5 +38,7 @@ pub fn poll(tx: Sender<WebhookDeliveryDetails>, gh: &GitHub, webhook: &CreateWeb
             log::error!("Error polling for payloads: {:?}", e);
             break;
         }
+
+        thread::sleep(Duration::from_secs(5)); // Sleep for 5 seconds
     }
 }

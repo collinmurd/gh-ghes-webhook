@@ -12,6 +12,10 @@ pub mod forwarder;
 struct Cli {
     #[command(subcommand)]
     command: Commands,
+
+    /// Enable debug logging
+    #[arg(short='X', long, default_value_t=false)]
+    debug: bool,
 }
 
 #[derive(Subcommand)]
@@ -53,7 +57,7 @@ struct WebhookLocation {
 
 fn main() {
     let cli = Cli::parse();
-    configure_logger();
+    configure_logger(cli.debug);
 
     match cli.command {
         Commands::Forward {events, github_host, location, secret, url} => {
@@ -98,9 +102,9 @@ fn main() {
     }
 }
 
-fn configure_logger() {
+fn configure_logger(verbose: bool) {
     TermLogger::init(
-        log::LevelFilter::Info,
+        if verbose { simplelog::LevelFilter::Debug } else { simplelog::LevelFilter::Info },
         ConfigBuilder::new()
             .set_time_format_rfc3339()
             .set_time_offset_to_local().unwrap()
