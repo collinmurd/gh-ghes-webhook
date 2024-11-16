@@ -62,3 +62,26 @@ fn build_headers(raw_headers: HashMap<String, String>) -> reqwest::header::Heade
     }
     headers
 }
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+
+    use super::build_headers;
+
+
+    #[test]
+    fn test_build_headers() {
+        // create a hashmap with some headers using serde_json
+        let headers= serde_json::json!({
+            "Content-Type": "application/json",
+            "X-My-Header": "my-value"
+        });
+        let headers: HashMap<String, String> = serde_json::from_value(headers).unwrap();
+        let result = build_headers(headers);
+
+        assert_eq!(result.len(), 2);
+        assert!(result.get("content-type").is_some_and(|v| v == "application/json"));
+        assert!(result.get("x-my-header").is_some_and(|v| v == "my-value"));
+    }
+}
