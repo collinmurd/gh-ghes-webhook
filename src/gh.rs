@@ -1,4 +1,4 @@
-use std::process::Command;
+use std::{collections::HashMap, process::Command};
 
 use chrono::{DateTime, Utc};
 use serde_json::Value;
@@ -139,7 +139,7 @@ pub struct WebhookDelivery {
 
 #[derive(serde::Deserialize, Debug)]
 pub struct WebhookDeliveryRequest {
-    pub headers: Value,
+    pub headers: HashMap<String, String>,
     pub payload: Value,
 }
 #[derive(serde::Deserialize, Debug)]

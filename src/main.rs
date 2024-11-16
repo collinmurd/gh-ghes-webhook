@@ -17,7 +17,7 @@ struct Cli {
 enum Commands {
     /// Forward webhooks to a local process
     Forward {
-        /// Names of the event types to forward. Use `*` to forward all events.
+        /// Names of the event types to forward. Use `*` to forward all events default: push
         #[arg(short='E', long, num_args=1.., value_delimiter=' ')]
         events: Vec<String>,
 
@@ -63,6 +63,7 @@ fn main() {
             let webhook = gh.create_webhook(secret, events).unwrap();
             println!("CLI Webhook created");
 
+            // Set up a handler to delete the webhook when the user presses Ctrl-C
             let gh_clone = gh.clone();
             ctrlc::set_handler(move || {
                 println!("Deleting webhook...");
@@ -72,18 +73,22 @@ fn main() {
 
             let (tx, rx) = mpsc::channel();
 
+            // spawn thread to poll for events
             thread::spawn(move || {
                 pollster::poll(tx, &gh, &webhook);
             });
 
+            // forward events
+            let forwarder: Box<dyn forwarder::Forwarder> = match url {
+                Some(u) => Box::new(forwarder::LocalForwarder::new(u)),
+                None => Box::new(forwarder::StdOutForwarder::new())
+            };
             loop {
-                match rx.recv() {
-                    Ok(payload) => {
-                        forwarder::forward(payload);
-                    },
-                    Err(_e) => {
-                        break;
-                    }
+                if let Ok(details) = rx.recv() {
+                    forwarder.forward(details.request);
+                } else {
+                    println!("failed to forward event");
+                    break;
                 }
             }
         }
