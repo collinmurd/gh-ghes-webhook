@@ -1,4 +1,4 @@
-use std::{sync::mpsc, thread};
+use std::{process::exit, sync::mpsc, thread};
 
 use clap::{Args, Parser, Subcommand};
 
@@ -41,7 +41,7 @@ enum Commands {
 #[derive(Args)]
 #[group(required = true, multiple=false)]
 struct WebhookLocation {
-        /// Name of the org where the webhook is installed
+        /// NOT SUPPORTED - organization where the webhook is installed
         #[arg(short='O', long)]
         org: Option<String>,
 
@@ -55,9 +55,12 @@ fn main() {
 
     match cli.command {
         Commands::Forward {events, github_host, location, secret, url} => {
-            let gh = match location.repo {
-                Some(r) => gh::GitHub::new_with_repo(github_host, r),
-                None => gh::GitHub::new_with_org(github_host, location.org.unwrap())
+            let gh = match location.org {
+                Some(_) => {
+                    println!("Organization webhooks are not supported.");
+                    exit(1);
+                }
+                None => gh::GitHub::new_with_repo(github_host, location.repo.unwrap()),
             };
 
             let webhook = gh.create_webhook(secret, events).unwrap();

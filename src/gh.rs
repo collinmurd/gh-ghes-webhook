@@ -21,17 +21,6 @@ impl GitHub {
         }
     }
 
-    pub fn new_with_org(host: String, org: String) -> Self {
-        let url = format!("https://api.{}/orgs/{}/hooks", host, org);
-
-        GitHub {
-            url: url,
-            client: reqwest::blocking::Client::builder()
-                .user_agent(env!("CARGO_PKG_NAME"))
-                .build().unwrap()
-        }
-    }
-
     pub fn create_webhook(&self, secret: Option<String>, events: Vec<String>) -> anyhow::Result<CreateWebhookResponse> {
         let token = self.get_auth_token().unwrap();
         let body = CreateWebhookPayload {
