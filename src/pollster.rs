@@ -15,21 +15,24 @@ pub fn poll(tx: Sender<WebhookDeliveryDetails>, gh: &GitHub, webhook: &CreateWeb
         let deliveries = gh.get_webhook_deliveries(webhook.id);
         if let Ok(deliveries) = deliveries {
             log::debug!("Received {} deliveries", deliveries.len());
-            // Iterate over deliveries in reverse order
-            // skip events before the start time and only process new events
+
             for delivery in deliveries.iter().rev() {
-                if let Some(last_delivery_id) = last_id {
+                if let Some(last_delivery_id) = last_id { // If we have a last_id, only get deliveries that are newer
                     if delivery.id > last_delivery_id {
                         last_id = Some(delivery.id);
-                        log::debug!("Getting details for delivery: {:?}", delivery.id);
-                        let details = gh.get_webhook_delivery_details(webhook.id, delivery.id).unwrap();
-                        tx.send(details).unwrap();
                     }
-                } else if delivery.delivered_at > start_time {
+                } else if delivery.delivered_at > start_time { // If we don't have a last_id, only get deliveries that are newer than the start time
                     last_id = Some(delivery.id);
-                    log::debug!("Getting details for delivery: {:?}", delivery.id);
-                    let details = gh.get_webhook_delivery_details(webhook.id, delivery.id).unwrap();
+                }
+
+                log::debug!("Getting details for delivery: {:?}", delivery.id);
+                let details_resp = gh.get_webhook_delivery_details(webhook.id, delivery.id);
+
+                if let Ok(details) = details_resp {
                     tx.send(details).unwrap();
+                } else {
+                    log::error!("Error getting delivery details: {:?}", delivery.id);
+                    break;
                 }
             }
         } else if let Err(e) = deliveries {

@@ -53,15 +53,7 @@ struct WebhookLocation {
 
 fn main() {
     let cli = Cli::parse();
-    TermLogger::init(
-        log::LevelFilter::Info,
-        ConfigBuilder::new()
-            .set_time_format_rfc3339()
-            .set_time_offset_to_local().unwrap()
-            .build(),
-        simplelog::TerminalMode::Mixed,
-        simplelog::ColorChoice::Auto
-    ).unwrap();
+    configure_logger();
 
     match cli.command {
         Commands::Forward {events, github_host, location, secret, url} => {
@@ -100,13 +92,22 @@ fn main() {
                 if let Ok(details) = rx.recv() {
                     log::info!("Forwarding event: {}", details.id);
                     forwarder.forward(details.request);
-                } else {
-                    log::error!("failed to forward event");
-                    break;
                 }
             }
         }
     }
+}
+
+fn configure_logger() {
+    TermLogger::init(
+        log::LevelFilter::Info,
+        ConfigBuilder::new()
+            .set_time_format_rfc3339()
+            .set_time_offset_to_local().unwrap()
+            .build(),
+        simplelog::TerminalMode::Mixed,
+        simplelog::ColorChoice::Auto
+    ).unwrap();
 }
 
 #[cfg(test)]
