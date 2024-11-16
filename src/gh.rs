@@ -139,3 +139,13 @@ pub struct WebhookDeliveryDetails {
     pub action: String,
     pub request: WebhookDeliveryRequest,
 }
+
+impl std::fmt::Display for WebhookDeliveryRequest {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let headers = self.headers.iter()
+            .map(|(k, v)| format!("{}: {}", k, v))
+            .collect::<Vec<String>>()
+            .join("\n");
+        write!(f, "{}\n\n{}", headers, self.payload)
+    }
+}

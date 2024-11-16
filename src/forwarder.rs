@@ -48,7 +48,7 @@ impl StdOutForwarder {
 
 impl Forwarder for StdOutForwarder {
     fn forward(&self, payload: WebhookDeliveryRequest) {
-        println!("Received webhook delivery: {:?}", payload);
+        log::info!("{}", payload);
     }
 }
 

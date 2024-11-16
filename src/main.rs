@@ -1,6 +1,7 @@
 use std::{process::exit, sync::mpsc, thread};
 
 use clap::{Args, Parser, Subcommand};
+use simplelog::{ConfigBuilder, TermLogger};
 
 pub mod gh;
 pub mod pollster;
@@ -52,24 +53,33 @@ struct WebhookLocation {
 
 fn main() {
     let cli = Cli::parse();
+    TermLogger::init(
+        log::LevelFilter::Info,
+        ConfigBuilder::new()
+            .set_time_format_rfc3339()
+            .set_time_offset_to_local().unwrap()
+            .build(),
+        simplelog::TerminalMode::Mixed,
+        simplelog::ColorChoice::Auto
+    ).unwrap();
 
     match cli.command {
         Commands::Forward {events, github_host, location, secret, url} => {
             let gh = match location.org {
                 Some(_) => {
-                    println!("Organization webhooks are not supported.");
+                    log::error!("Organization webhooks are not supported.");
                     exit(1);
                 }
                 None => gh::GitHub::new_with_repo(github_host, location.repo.unwrap()),
             };
 
             let webhook = gh.create_webhook(secret, events).unwrap();
-            println!("CLI Webhook created");
+            log::info!("CLI Webhook created");
 
             // Set up a handler to delete the webhook when the user presses Ctrl-C
             let gh_clone = gh.clone();
             ctrlc::set_handler(move || {
-                println!("Deleting webhook...");
+                log::info!("Deleting CLI webhook");
                 gh_clone.delete_webhook(webhook.id).unwrap();
                 std::process::exit(0);
             }).unwrap();
@@ -88,9 +98,10 @@ fn main() {
             };
             loop {
                 if let Ok(details) = rx.recv() {
+                    log::info!("Forwarding event: {}", details.id);
                     forwarder.forward(details.request);
                 } else {
-                    println!("failed to forward event");
+                    log::error!("failed to forward event");
                     break;
                 }
             }
