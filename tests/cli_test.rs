@@ -78,7 +78,7 @@ fn run_cli_forward(mut args: Vec<&str>) -> Result<Output, CliError> {
 
 fn add_mock_gh_to_path() -> String {
     let current_dir = env::current_dir().unwrap();
-    let test_path = current_dir.join("tests");
+    let test_path = current_dir.join("tests").join("bin");
     let path = env::var("PATH").unwrap();
     format!("{}:{}", test_path.display(), path)
 }
