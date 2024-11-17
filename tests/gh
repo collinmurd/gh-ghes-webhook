@@ -1,0 +1,8 @@
+#!/bin/bash
+# this is a mock for the gh cli
+
+# if the args are ["auth", "token"], then return a fake token
+if [ "$1" == "auth" ] && [ "$2" == "token" ]; then
+  echo "gh_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  exit 0
+fi

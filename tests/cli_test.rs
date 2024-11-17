@@ -1,4 +1,4 @@
-use std::{path::Path, process::{Command, Output}};
+use std::{env, path::Path, process::{Command, Output}};
 
 use httpmock::{MockServer};
 use serde_json::json;
@@ -6,6 +6,18 @@ use serde_json::json;
 #[test]
 fn test_run_help() {
     assert!(run_cli_forward(vec!["-h"]).is_ok());
+}
+
+#[test]
+fn test_mock_gh() {
+    // verify the mock gh cli is working
+    let result = Command::new("gh")
+        .env("PATH", add_mock_gh_to_path())
+        .args(["auth", "token"])
+        .output();
+
+    assert!(result.is_ok());
+    assert!(result.unwrap().stdout == b"gh_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n");
 }
 
 #[test]
@@ -17,9 +29,6 @@ fn test_run_with_org() {
 
 #[test]
 fn test_ctrl_c() {
-    let server = MockGhServer::new();
-    server.add_create_webhook();
-    let result = run_cli_forward(vec!["--org", "test"]);
 }
 
 struct CliError {
@@ -41,6 +50,7 @@ fn run_cli_forward(mut args: Vec<&str>) -> Result<Output, CliError> {
     args.insert(0, "forward");
 
     let result = Command::new("target/debug/gh-ghes-webhook")
+        .env("PATH", add_mock_gh_to_path())
         .args(args)
         .output();
 
@@ -64,6 +74,13 @@ fn run_cli_forward(mut args: Vec<&str>) -> Result<Output, CliError> {
             })
         }
     }
+}
+
+fn add_mock_gh_to_path() -> String {
+    let current_dir = env::current_dir().unwrap();
+    let test_path = current_dir.join("tests");
+    let path = env::var("PATH").unwrap();
+    format!("{}:{}", test_path.display(), path)
 }
 
 struct MockGhServer {
