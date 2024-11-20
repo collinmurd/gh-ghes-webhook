@@ -742,6 +742,7 @@ dependencies = [
  "ctrlc",
  "httpmock",
  "log",
+ "nix",
  "reqwest",
  "serde",
  "serde_json",

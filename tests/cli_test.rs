@@ -1,6 +1,7 @@
-use std::{env, path::Path, process::{Command, Output}};
+use std::{env, path::Path, process::{Child, Command, Output, Stdio}};
 
 use httpmock::{MockServer};
+use nix::{sys::signal, unistd::Pid};
 use serde_json::json;
 
 #[test]
@@ -22,22 +23,31 @@ fn test_mock_gh() {
 
 #[test]
 fn test_run_with_org() {
-    let result = run_cli_forward(vec!["--org", "test"]);
-    assert!(result.is_err());
-    assert!(result.unwrap_err().stderr.contains("Organization webhooks are not supported."));
+    let result = run_cli_forward(vec!["--org", "test"]).unwrap().wait_with_output().unwrap();
+
+    assert!(result.status.code().unwrap() == 1);
+    assert!(String::from_utf8_lossy(&result.stderr).contains("Organization webhooks are not supported."));
 }
 
 #[test]
 fn test_ctrl_c() {
+    let child = run_cli_forward(vec!["forward", "--repo", "org/repo"]).unwrap();
+
+    signal::kill(Pid::from_raw(child.id() as i32), nix::sys::signal::SIGINT).unwrap();
+
+    let result = child.wait_with_output().unwrap();
+    assert!(!result.status.success());
+    assert!(!String::from_utf8_lossy(&result.stdout).contains("Deleting CLI webhook"));
 }
 
+#[derive(Debug)]
 struct CliError {
     status: i32,
     spawn_error: Option<std::io::Error>,
     stderr: String,
 }
 
-fn run_cli_forward(mut args: Vec<&str>) -> Result<Output, CliError> {
+fn run_cli_forward(mut args: Vec<&str>) -> Result<Child, CliError> {
     if !Path::new("target/debug/gh-ghes-webhook").exists() {
         println!("Build the CLI with `cargo build` before running integration tests.");
         return Err(CliError {
@@ -49,22 +59,16 @@ fn run_cli_forward(mut args: Vec<&str>) -> Result<Output, CliError> {
 
     args.insert(0, "forward");
 
-    let result = Command::new("target/debug/gh-ghes-webhook")
+    let child = Command::new("target/debug/gh-ghes-webhook")
         .env("PATH", add_mock_gh_to_path())
         .args(args)
-        .output();
+        .stderr(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn();
 
-    match result {
-        Ok(output) => {
-            if output.status.success() {
-                Ok(output)
-            } else {
-                Err(CliError {
-                    status: output.status.code().unwrap(),
-                    spawn_error: None,
-                    stderr: String::from_utf8(output.stderr).unwrap()
-                })
-            }
+    match child {
+        Ok(child) => {
+            Ok(child)
         }
         Err(e) => {
             Err(CliError {

@@ -16,3 +16,4 @@ simplelog = "0.12.2"
 
 [dev-dependencies]
 httpmock = "0.8.0-alpha.1"
+nix = "0.29.0"
