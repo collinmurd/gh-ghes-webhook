@@ -33,7 +33,7 @@ impl GitHub {
             active: true,
             events: events,
             config: WebhookConfig {
-                content_type: WebhookContentType::Json,
+                content_type: "json".to_string(),
                 secret: secret,
             }
         };
@@ -99,12 +99,8 @@ impl GitHub {
 }
 
 #[derive(serde::Serialize, Debug)]
-enum WebhookContentType {
-    Json,
-}
-#[derive(serde::Serialize, Debug)]
 struct WebhookConfig {
-    content_type: WebhookContentType,
+    content_type: String,
     secret: Option<String>,
 }
 #[derive(serde::Serialize, Debug)]

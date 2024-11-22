@@ -23,18 +23,26 @@ impl LocalForwarder {
             url: clean_url,
             client: reqwest::blocking::Client::builder()
                 .user_agent(env!("CARGO_PKG_NAME"))
-                .build().unwrap()
+                .build()
+                .expect("Failed to instantiate local forwarder client");
         }
     }
 }
 
 impl Forwarder for LocalForwarder {
     fn forward(&self, payload: WebhookDeliveryRequest) {
-        self.client.post(&self.url)
+        let result = self.client.post(&self.url)
             .json(&payload.payload)
             .headers(build_headers(payload.headers))
-            .send()
-            .unwrap();
+            .send();
+
+        if let Err(e) = result {
+            log::warn!("Error forwarding payload: {:?}", e);
+            return;
+        } else {
+            let resp = result.unwrap();
+            log::info!("{} - {}", resp.status(), resp.text().unwrap());
+        }
     }
 }
 
