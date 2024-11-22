@@ -81,8 +81,8 @@ fn test_foward_to_local_server() {
 
     let mut child = run_cli_forward(vec!["--github-host", host.as_str(), "--repo", "org/repo", "--url", url.as_str()]).unwrap();
 
-    // sleep for a second to allow the CLI to grab webhook deliveries
-    std::thread::sleep(std::time::Duration::from_secs(1));
+    // sleep for a second to allow the CLI to grab webhook deliveries. should forward once
+    std::thread::sleep(std::time::Duration::from_secs(7));
     child.kill().unwrap();
 
     mock_reciever_endpoint.assert();
@@ -208,7 +208,7 @@ impl MockGhServer {
                 .body(json!([
                     {
                         "id": 1,
-                        "delivered_at": "2021-08-01T00:00:00Z",
+                        "delivered_at": "2099-08-01T00:00:00Z",
                         "event": "issues",
                         "action": "opened"
                     }
