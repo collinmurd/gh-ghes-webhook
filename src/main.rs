@@ -1,6 +1,7 @@
 use std::{process::exit, sync::mpsc, thread};
 
 use clap::{Args, Parser, Subcommand};
+use gh::GitHub;
 use simplelog::{ConfigBuilder, TermLogger};
 
 pub mod gh;
@@ -70,21 +71,17 @@ fn main() {
             };
 
             let webhook = gh.create_webhook(secret, events).unwrap();
+            let webhook_id = webhook.id;
             log::info!("CLI Webhook created");
 
             // Set up a handler to delete the webhook when the user presses Ctrl-C
-            let gh_clone = gh.clone();
-            ctrlc::set_handler(move || {
-                log::info!("Deleting CLI webhook");
-                gh_clone.delete_webhook(webhook.id).unwrap();
-                std::process::exit(0);
-            }).unwrap();
-
-            let (tx, rx) = mpsc::channel();
+            set_ctrlc_listener(&gh, webhook_id);
 
             // spawn thread to poll for events
+            let (tx, rx) = mpsc::channel();
+            let gh_clone = gh.clone();
             thread::spawn(move || {
-                pollster::poll(tx, &gh, &webhook);
+                pollster::poll(tx, &gh_clone, &webhook);
             });
 
             // forward events
@@ -94,8 +91,17 @@ fn main() {
             };
             loop {
                 if let Ok(details) = rx.recv() {
-                    log::info!("Forwarding event: {}", details.id);
-                    forwarder.forward(details.request);
+                    match details {
+                        pollster::PollMessage::TimedOut => {
+                            log::warn!("Polling timed out after 10 minutes of inactivity. Shutting down...");
+                            gh.delete_webhook(webhook_id).unwrap();
+                            break;
+                        }
+                        pollster::PollMessage::Delivery(details) => {
+                            log::info!("Forwarding event: {}", details.id);
+                            forwarder.forward(details.request);
+                        }
+                    }
                 }
             }
         }
@@ -112,6 +118,15 @@ fn configure_logger(verbose: bool) {
         simplelog::TerminalMode::Mixed,
         simplelog::ColorChoice::Auto
     ).unwrap();
+}
+
+fn set_ctrlc_listener(gh: &GitHub, webhook_id: u32) {
+    let gh_clone = gh.clone();
+    ctrlc::set_handler(move || {
+        log::info!("Deleting CLI webhook");
+        gh_clone.delete_webhook(webhook_id).unwrap();
+        std::process::exit(0);
+    }).unwrap();
 }
 
 #[cfg(test)]
