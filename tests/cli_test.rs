@@ -135,10 +135,22 @@ fn add_mock_gh_to_path() -> String {
     format!("{}:{}", test_path.display(), path)
 }
 
+fn payload() -> serde_json::Value {
+    json!({
+        "issue": {
+            "title": "Test Issue",
+            "body": "Test Body"
+        }
+    })
+}
+
+
 fn create_mock_reciever_endpoint(server: &MockServer) -> httpmock::Mock {
     server.mock(|when, then| {
         when.method(httpmock::Method::POST)
-            .path("/test");
+            .path("/test")
+            .header("Content-Type", "application/json")
+            .body(payload().to_string());
         then.status(200);
     })
 }
@@ -218,12 +230,7 @@ impl MockGhServer {
                         "headers": {
                             "Content-Type": "application/json"
                         },
-                        "payload": {
-                            "issue": {
-                                "title": "Test Issue",
-                                "body": "Test Body"
-                            }
-                        }
+                        "payload": payload()
                     }
                 }).to_string());
         });
