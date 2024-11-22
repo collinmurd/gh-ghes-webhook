@@ -49,6 +49,45 @@ fn test_ctrl_c() {
     assert!(String::from_utf8_lossy(&result.stdout).contains("Deleting CLI webhook"));
 }
 
+#[test]
+fn test_forward_to_stdout() {
+    let gh_server = MockGhServer::new();
+    gh_server.add_all_mocks();
+    let host = format!("localhost:{}", gh_server.server.port());
+
+    let mut child = run_cli_forward(vec!["--github-host", host.as_str(), "--repo", "org/repo"]).unwrap();
+
+    // sleep for a second to allow the CLI to grab webhook deliveries
+    std::thread::sleep(std::time::Duration::from_secs(1));
+    child.kill().unwrap();
+
+    let output = child.wait_with_output().unwrap();
+    assert!(String::from_utf8_lossy(&output.stdout).contains("Forwarding event: 1"));
+    assert!(String::from_utf8_lossy(&output.stdout).contains("Content-Type: application/json"));
+    assert!(String::from_utf8_lossy(&output.stdout).contains("{\"issue\":{\"body\":\"Test Body\",\"title\":\"Test Issue\"}}"));
+}
+
+#[test]
+fn test_foward_to_local_server() {
+    // mock gh server
+    let gh_server = MockGhServer::new();
+    gh_server.add_all_mocks();
+    let host = format!("localhost:{}", gh_server.server.port());
+
+    // mock local server
+    let mock_reciever = MockServer::start();
+    let mock_reciever_endpoint= create_mock_reciever_endpoint(&mock_reciever);
+    let url = format!("localhost:{}/test", mock_reciever.port());
+
+    let mut child = run_cli_forward(vec!["--github-host", host.as_str(), "--repo", "org/repo", "--url", url.as_str()]).unwrap();
+
+    // sleep for a second to allow the CLI to grab webhook deliveries
+    std::thread::sleep(std::time::Duration::from_secs(1));
+    child.kill().unwrap();
+
+    mock_reciever_endpoint.assert();
+}
+
 #[derive(Debug)]
 struct CliError {
     status: i32,
@@ -94,6 +133,14 @@ fn add_mock_gh_to_path() -> String {
     let test_path = current_dir.join("tests").join("bin");
     let path = env::var("PATH").unwrap();
     format!("{}:{}", test_path.display(), path)
+}
+
+fn create_mock_reciever_endpoint(server: &MockServer) -> httpmock::Mock {
+    server.mock(|when, then| {
+        when.method(httpmock::Method::POST)
+            .path("/test");
+        then.status(200);
+    })
 }
 
 struct MockGhServer {
@@ -146,7 +193,14 @@ impl MockGhServer {
             when.method(httpmock::Method::GET)
                 .path("/repos/org/repo/hooks/1/deliveries");
             then.status(200)
-                .body(json!([]).to_string());
+                .body(json!([
+                    {
+                        "id": 1,
+                        "delivered_at": "2021-08-01T00:00:00Z",
+                        "event": "issues",
+                        "action": "opened"
+                    }
+                ]).to_string());
         });
     }
 

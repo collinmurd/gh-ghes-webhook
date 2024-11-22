@@ -12,7 +12,7 @@ pub struct GitHub {
 impl GitHub {
     pub fn new_with_repo(host: String, repo: String) -> Self {
         let url;
-        if (host.contains("localhost")) {
+        if host.contains("localhost") {
             url = format!("http://{}/repos/{}/hooks", host, repo);
         } else {
             url = format!("https://api.{}/repos/{}/hooks", host, repo);
