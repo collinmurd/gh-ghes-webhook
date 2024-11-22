@@ -1,6 +1,6 @@
-use std::{env, path::Path, process::{Child, Command, Output, Stdio}};
+use std::{env, path::Path, process::{Child, Command, Stdio}};
 
-use httpmock::{MockServer};
+use httpmock::MockServer;
 use nix::{sys::signal, unistd::Pid};
 use serde_json::json;
 
@@ -25,19 +25,28 @@ fn test_mock_gh() {
 fn test_run_with_org() {
     let result = run_cli_forward(vec!["--org", "test"]).unwrap().wait_with_output().unwrap();
 
-    assert!(result.status.code().unwrap() == 1);
+    assert!(!result.status.success());
     assert!(String::from_utf8_lossy(&result.stderr).contains("Organization webhooks are not supported."));
 }
 
+#[cfg(not(target_os = "windows"))]
 #[test]
 fn test_ctrl_c() {
-    let child = run_cli_forward(vec!["forward", "--repo", "org/repo"]).unwrap();
+    let gh_server = MockGhServer::new();
+    gh_server.add_all_mocks();
+    let host = format!("localhost:{}", gh_server.server.port());
 
+    let child = run_cli_forward(vec!["--github-host", host.as_str(), "--repo", "org/repo"]).unwrap();
+
+    // sleep for a second to allow the CLI to start
+    std::thread::sleep(std::time::Duration::from_secs(1));
+
+    // send a SIGINT to the child process (doesn't work that way on windows)
     signal::kill(Pid::from_raw(child.id() as i32), nix::sys::signal::SIGINT).unwrap();
 
     let result = child.wait_with_output().unwrap();
-    assert!(!result.status.success());
-    assert!(!String::from_utf8_lossy(&result.stdout).contains("Deleting CLI webhook"));
+    assert!(result.status.success());
+    assert!(String::from_utf8_lossy(&result.stdout).contains("Deleting CLI webhook"));
 }
 
 #[derive(Debug)]
@@ -117,6 +126,7 @@ impl MockGhServer {
                         "content_type": "json",
                         "secret": "test"
                     },
+                    "name": "cli",
                     "events": ["issues"],
                     "active": true
                 }).to_string());
