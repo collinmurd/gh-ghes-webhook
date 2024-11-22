@@ -24,7 +24,7 @@ impl LocalForwarder {
             client: reqwest::blocking::Client::builder()
                 .user_agent(env!("CARGO_PKG_NAME"))
                 .build()
-                .expect("Failed to instantiate local forwarder client");
+                .expect("Failed to instantiate local forwarder client")
         }
     }
 }
