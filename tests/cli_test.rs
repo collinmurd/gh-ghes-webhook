@@ -1,7 +1,6 @@
 use std::{env, path::Path, process::{Child, Command, Stdio}};
 
 use httpmock::MockServer;
-use nix::{sys::signal, unistd::Pid};
 use serde_json::json;
 
 #[test]
@@ -42,7 +41,9 @@ fn test_ctrl_c() {
     std::thread::sleep(std::time::Duration::from_secs(1));
 
     // send a SIGINT to the child process (doesn't work that way on windows)
-    signal::kill(Pid::from_raw(child.id() as i32), nix::sys::signal::SIGINT).unwrap();
+    nix::sys::signal::kill(
+        nix::unistd::Pid::from_raw(child.id() as i32), nix::sys::signal::SIGINT
+    ).unwrap();
 
     let result = child.wait_with_output().unwrap();
     assert!(result.status.success());
