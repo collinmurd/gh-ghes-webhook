@@ -1,4 +1,4 @@
-use std::{env, path::Path, process::{Child, Command, Stdio}};
+use std::{env, process::{Child, Command, Stdio}};
 
 use httpmock::MockServer;
 use serde_json::json;
@@ -112,7 +112,9 @@ fn add_mock_gh_to_path() -> String {
     let current_dir = env::current_dir().unwrap();
     let test_path = current_dir.join("tests").join("bin");
     let path = env::var("PATH").unwrap();
-    format!("{}:{}", test_path.display(), path)
+    let mut paths = env::split_paths(&path).collect::<Vec<_>>();
+    paths.insert(0, test_path);
+    env::join_paths(paths).unwrap().to_string_lossy().to_string()
 }
 
 fn payload() -> serde_json::Value {
