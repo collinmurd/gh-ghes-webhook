@@ -2,6 +2,7 @@ use std::{collections::HashMap, process::Command};
 
 use chrono::{DateTime, Utc};
 use serde_json::Value;
+use which::which;
 
 #[derive(Clone)]
 pub struct GitHub {
@@ -87,7 +88,8 @@ impl GitHub {
     }
 
     fn get_auth_token(&self) -> Result<String, String> {
-        let output = Command::new("gh")
+        let cmd = which("gh").unwrap(); // gh has to be installed, otherwise how are you running this?
+        let output = Command::new(cmd)
             .args(["auth", "token"])
             .output();
 
