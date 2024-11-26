@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: debug
         run: |
-          set PATH=%PATH%;D:\a\gh-ghes-webhook\gh-ghes-webhook\tests\bin
+          $env:PATH += ';D:\a\gh-ghes-webhook\gh-ghes-webhook\tests\bin'
           where gh
           gh auth token
       # - name: Test
