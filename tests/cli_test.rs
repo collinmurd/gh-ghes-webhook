@@ -11,6 +11,7 @@ fn test_run_help() {
 #[test]
 fn test_mock_gh() {
     // verify the mock gh cli is working
+    println!("PATH: {}", add_mock_gh_to_path());
     let result = Command::new("gh")
         .env("PATH", add_mock_gh_to_path())
         .args(["auth", "token"])
