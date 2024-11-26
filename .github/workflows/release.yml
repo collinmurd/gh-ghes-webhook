@@ -19,28 +19,31 @@ jobs:
       - name: Test
         shell: cmd # integration tests use a .bat script to mock the gh cli
         run: cargo test
-      - name: Build
-        run: |
-          rustup toolchain list
-          cargo build --release --locked
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ runner.os }}-gh-ghes-webhook
-          path: target/release/gh-ghes-webhook.exe
-  build-linux:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Test
-        run: cargo test
-      - name: Build
-        run: |
-          rustup toolchain list
-          cargo build --release --locked
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ runner.os }}-gh-ghes-webhook
-          path: target/release/gh-ghes-webhook
+      # - name: Build
+      #   run: |
+      #     rustup toolchain list
+      #     cargo build --release --locked
+      # - name: Upload artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: ${{ runner.os }}-gh-ghes-webhook
+      #     path: target/release/gh-ghes-webhook.exe
+      #     overwrite: true
+
+  # build-linux:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Test
+  #       run: cargo test
+  #     - name: Build
+  #       run: |
+  #         rustup toolchain list
+  #         cargo build --release --locked
+  #     - name: Upload artifact
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: ${{ runner.os }}-gh-ghes-webhook
+  #         path: target/release/gh-ghes-webhook
+  #         overwrite: true
 

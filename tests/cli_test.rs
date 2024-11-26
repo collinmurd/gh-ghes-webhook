@@ -18,7 +18,9 @@ fn test_mock_gh() {
         .output();
 
     assert!(result.is_ok());
-    assert!(result.unwrap().stdout == b"gh_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n");
+    let result = result.unwrap();
+    println!("stdout: {}", String::from_utf8_lossy(&result.stdout));
+    assert!(&result.stdout == b"gh_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n");
 }
 
 #[test]
