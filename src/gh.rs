@@ -89,6 +89,7 @@ impl GitHub {
 
     fn get_auth_token(&self) -> Result<String, String> {
         let cmd = which("gh").unwrap(); // gh has to be installed, otherwise how are you running this?
+        println!("cmd: {:?}", cmd);
         let output = Command::new(cmd)
             .args(["auth", "token"])
             .output();
