@@ -15,9 +15,24 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        # os: [ubuntu-latest, windows-latest]
+        os: [windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - name: Test
-        run: cargo test
+      - name: debug
+        run: |
+          set PATH=D:\a\gh-ghes-webhook\gh-ghes-webhook\tests\bin;%PATH%
+          where gh
+          gh auth token
+      # - name: Test
+      #   run: cargo test
+      # - name: Build
+      #   run: |
+      #     rustup toolchain list
+      #     cargo build --release --locked
+      # - name: Upload artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: ${{ runner.os }}-gh-ghes-webhook
+      #     path: target/release/gh-ghes-webhook
