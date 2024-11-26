@@ -23,6 +23,7 @@ jobs:
       - name: debug
         shell: cmd
         run: |
+          set PATH=D:\a\gh-ghes-webhook\gh-ghes-webhook\tests\bin;%PATH%
           where gh
           gh auth token
       # - name: Test
