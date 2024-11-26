@@ -89,23 +89,8 @@ fn test_foward_to_local_server() {
     mock_reciever_endpoint.assert();
 }
 
-#[derive(Debug)]
-struct CliError {
-    status: i32,
-    spawn_error: Option<std::io::Error>,
-    stderr: String,
-}
 
-fn run_cli_forward(mut args: Vec<&str>) -> Result<Child, CliError> {
-    if !Path::new("target/debug/gh-ghes-webhook").exists() {
-        println!("Build the CLI with `cargo build` before running integration tests.");
-        return Err(CliError {
-            status: 1,
-            spawn_error: None,
-            stderr: String::from("CLI not found. Please build the CLI before running integration tests: `cargo build`")
-        });
-    }
-
+fn run_cli_forward(mut args: Vec<&str>) -> Result<Child, ()> {
     args.insert(0, "forward");
 
     let child = Command::new("target/debug/gh-ghes-webhook")
@@ -119,13 +104,7 @@ fn run_cli_forward(mut args: Vec<&str>) -> Result<Child, CliError> {
         Ok(child) => {
             Ok(child)
         }
-        Err(e) => {
-            Err(CliError {
-                status: 1,
-                spawn_error: Some(e),
-                stderr: String::from("Failed to spawn CLI")
-            })
-        }
+        Err(_) => Err(())
     }
 }
 
