@@ -21,8 +21,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: debug
+        shell: cmd
         run: |
-          $env:PATH = 'D:\a\gh-ghes-webhook\gh-ghes-webhook\tests\bin;' + $env:PATH
           where gh
           gh auth token
       # - name: Test
