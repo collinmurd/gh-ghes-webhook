@@ -2,19 +2,18 @@ use std::{env, process::{Child, Command, Stdio}};
 
 use httpmock::MockServer;
 use serde_json::json;
-use which::which;
 
 #[test]
 fn test_run_help() {
     assert!(run_cli_forward(vec!["-h"]).is_ok());
 }
 
+#[cfg(not(target_os = "windows"))]
 #[test]
 fn test_mock_gh() {
     // verify the mock gh cli is working
-    env::set_var("PATH", add_mock_gh_to_path());
-    let cmd = which("gh").unwrap(); // gh has to be installed, otherwise how are you running this?
-    let result = Command::new(cmd)
+    let result = Command::new("gh")
+        .env("PATH", add_mock_gh_to_path())
         .args(["auth", "token"])
         .output();
 
