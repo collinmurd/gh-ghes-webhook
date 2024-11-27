@@ -78,6 +78,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create \
-            --generate-notes
-            ${{ github.ref_name }}
+            --generate-notes \
+            ${{ github.ref_name }} \
             gh-ghes-webhook*
