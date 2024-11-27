@@ -11,7 +11,7 @@ This extension utilizes the GitHub API to poll, retrive, and forward webhook pay
 ## Installation
 
 ```
-gh exstension install ghes-webhook
+gh extension install ghes-webhook
 ```
 
 ## Usage
@@ -30,3 +30,6 @@ Organizations may be concerned about exceeding rate limits. There are built-in p
 - Organization level webhooks are disabled. There is an `--org` parameter built-in to match `gh webhook`, but it is not implemented.
 - The extension polls for new webhook deliveries every 5 seconds, meaning there will be a delay between an event taking place and the CLI forwarding it. As of now, this is not configurable.
 - The extension will stop polling if it has not seen a new event in 10 minutes. You can simply restart the process to continue. This is also not configurable as of now.
+
+### Compatability
+There are no promises about compatability with GHES versions, because there aren't any available to test against. This CLI extension does use an [undocumented API endpoint](https://github.com/orgs/community/discussions/38262#discussioncomment-6862260), which may come or go based on GitHub's release.
