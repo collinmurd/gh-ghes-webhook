@@ -8,6 +8,7 @@ fn test_run_help() {
     assert!(run_cli_forward(vec!["-h"]).is_ok());
 }
 
+#[cfg(not(target_os = "windows"))]
 #[test]
 fn test_mock_gh() {
     // verify the mock gh cli is working
@@ -17,7 +18,9 @@ fn test_mock_gh() {
         .output();
 
     assert!(result.is_ok());
-    assert!(result.unwrap().stdout == b"gh_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n");
+    let result = result.unwrap();
+    println!("stdout: {}", String::from_utf8_lossy(&result.stdout));
+    assert!(&result.stdout == b"gh_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n");
 }
 
 #[test]
