@@ -11,7 +11,7 @@ This extension utilizes the GitHub API to poll, retrive, and forward webhook pay
 ## Installation
 
 ```
-gh extension install ghes-webhook
+gh extension install collinmurd/gh-ghes-webhook
 ```
 
 ## Usage
