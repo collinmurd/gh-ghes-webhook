@@ -70,13 +70,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
-        with:
-          merge-multiple: true
       - name: Rename artifacts
         run: |
-          ls -alR
-          mv Linux-gh-ghes-webhook gh-ghes-webhook-linux-amd64
-          mv Windows-gh-ghes-webhook gh-ghes-webhook-windows-amd64.exe
+          mv Linux-gh-ghes-webhook/gh-ghes-webhook ./gh-ghes-webhook-linux-amd64
+          mv Windows-gh-ghes-webhook/gh-ghes-webhook.exe ./gh-ghes-webhook-windows-amd64.exe
       - name: Create Release
         env:
           GH_TOKEN: ${{ github.token }}
