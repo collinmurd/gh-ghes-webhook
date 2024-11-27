@@ -70,6 +70,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
       - name: Rename artifacts
         run: |
           mv Linux-gh-ghes-webhook gh-ghes-webhook-linux-amd64
@@ -79,6 +81,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create \
-            --generate-notes \
             ${{ github.ref_name }} \
             gh-ghes-webhook*
