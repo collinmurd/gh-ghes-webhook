@@ -79,5 +79,5 @@ jobs:
         run: |
           gh release create \
             --generate-notes
-            ${{ github.ref }}
+            ${{ github.ref_name }}
             gh-ghes-webhook*
