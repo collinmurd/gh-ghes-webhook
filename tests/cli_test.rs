@@ -59,7 +59,7 @@ fn test_forward_to_stdout() {
     gh_server.add_all_mocks();
     let host = format!("localhost:{}", gh_server.server.port());
 
-    let mut child = run_cli_forward(vec!["--github-host", host.as_str(), "--repo", "org/repo"]).unwrap();
+    let mut child = run_cli_forward(vec!["--github-host", host.as_str(), "--repo", "org/repo", "--events", "issues,pull_request"]).unwrap();
 
     // sleep for a second to allow the CLI to grab webhook deliveries
     std::thread::sleep(std::time::Duration::from_secs(1));

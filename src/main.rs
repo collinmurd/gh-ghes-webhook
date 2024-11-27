@@ -24,7 +24,7 @@ enum Commands {
     /// Forward webhooks to a local process
     Forward {
         /// Names of the event types to forward. Use `*` to forward all events default: push
-        #[arg(short='E', long, num_args=1.., value_delimiter=' ')]
+        #[arg(short='E', long, num_args=1.., value_delimiter=',')]
         events: Vec<String>,
 
         /// GitHub host name (default "github.com")
