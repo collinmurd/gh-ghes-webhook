@@ -33,3 +33,5 @@ Organizations may be concerned about exceeding rate limits. There are built-in p
 
 ### Compatability
 There are no promises about compatability with GHES versions, because there aren't any available to test against. This CLI extension does use an [undocumented API endpoint](https://github.com/orgs/community/discussions/38262#discussioncomment-6862260), which may come or go based on GitHub's release.
+
+:)
